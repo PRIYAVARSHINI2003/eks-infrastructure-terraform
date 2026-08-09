@@ -1,0 +1,60 @@
+pipeline {
+    agent any
+
+
+    parameters {
+        choice(
+            name: 'ACTION',
+            choices: ['apply', 'destroy'],
+            description: 'Choose Terraform action'
+        )
+    }
+
+    environment {
+        AWS_DEFAULT_REGION = "us-east-1"
+        TF_VAR_github_token = credentials('github-token')
+    }
+
+    stages {
+        stage('Checkout Code') {
+            steps {
+                git branch: 'main',
+                credentialsId: 'github-token',
+                url: 'https://github.com/PRIYAVARSHINI2003/Dockerapplication.git'
+            }
+        }
+
+        stage('Terraform Init') {
+            steps {
+                bat 'terraform init'
+            }
+        }
+
+        stage('Terraform Validate') {
+            steps {
+                bat 'terraform validate'
+            }
+        }
+
+        stage('Terraform Plan') {
+            steps {
+                bat 'terraform plan'
+            }
+        }
+
+        stage('Terraform Apply') {
+            steps {
+                  script {
+                    if (params.ACTION == 'apply') {
+                        bat 'terraform apply -auto-approve'
+                    }
+                    else if (params.ACTION == 'destroy') {
+                        bat 'terraform destroy -auto-approve'
+                    }
+                  }
+                }
+                
+            
+        }
+    }
+}
